@@ -1,0 +1,49 @@
+{
+  "name": "北海道7日6夜智能旅行助手",
+  "short_name": "北海道助手",
+  "description": "北海道札幌、小樽、登別、定山溪7日6夜智能旅行助手。",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff7ed",
+  "theme_color": "#f59e0b",
+  "categories": ["travel", "navigation", "productivity"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "每日行程",
+      "short_name": "每日",
+      "description": "查看北海道每日行程",
+      "url": "./index.html#days",
+      "icons": [
+        {
+          "src": "./icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "必買預約",
+      "short_name": "預約",
+      "description": "查看必買預約 checklist",
+      "url": "./index.html#booking",
+      "icons": [
+        {
+          "src": "./icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

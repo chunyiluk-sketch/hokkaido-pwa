@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>北海道 7日6夜・智能旅行助手（Yi Panda PWA版）</title>
+  <meta name="description" content="北海道札幌、小樽、登別、定山溪7日6夜智能旅行助手 PWA。" />
+  <meta name="theme-color" content="#f59e0b" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="北海道助手" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <style>
+    :root {
+      --bg: #fff7ed;
+      --bg-2: #fffbeb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #fed7aa;
+      --primary: #f59e0b;
+      --primary-dark: #b45309;
+      --primary-soft: #fef3c7;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --shadow: 0 12px 30px rgba(120, 53, 15, 0.12);
+      --radius: 22px;
+      --radius-sm: 15px;
+      --bottom-nav-height: 82px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Noto Sans HK", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #fde68a 0, transparent 34%),
+        radial-gradient(circle at top right, #bfdbfe 0, transparent 28%),
+        linear-gradient(180deg, var(--bg-2), var(--bg));
+      min-height: 100vh;
+      padding-bottom: var(--bottom-nav-height);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .pwa-banner {
+      display: none;
+      position: sticky;
+      top: 8px;
+      z-index: 50;
+      margin-bottom: 12px;
+      background: #111827;
+      color: white;
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 12px 28px rgba(17, 24, 39, 0.2);
+    }
+
+    .pwa-banner.show {
+      display: block;
+    }
+
+    .pwa-banner-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pwa-banner strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .pwa-banner span {
+      display: block;
+      color: rgba(255,255,255,0.78);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .hero {
+      background:
+        linear-gradient(135deg, rgba(31, 41, 55, 0.92), rgba(180, 83, 9, 0.92)),
+        radial-gradient(circle at 82% 12%, rgba(255,255,255,0.3), transparent 25%);
+      color: white;
+      border-radius: 28px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "❄️";
+      position: absolute;
+      right: 18px;
+      bottom: -24px;
+      font-size: 118px;
+      opacity: 0.12;
+      transform: rotate(-12deg);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.25);
+      font-size: 30px;
+      flex: 0 0 auto;
+    }
+
+    .hero-title {
+      flex: 1;
+    }
+
+    .hero-title h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.18;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-title p {
+      margin: 6px 0 0;
+      color: rgba(255,255,255,0.86);
+      font-size: 13px;
+    }
+
+    .version-pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.26);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 18px;
+      padding: 10px 8px;
+      text-align: center;
+      min-height: 72px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 5px;
+      font-size: 11px;
+      opacity: 0.86;
+    }
+
+    .top-actions {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .gps-box {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .round-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      font-size: 22px;
+      flex: 0 0 auto;
+    }
+
+    .gps-box h3,
+    .weather-box h3 {
+      margin: 0 0 2px;
+      font-size: 15px;
+    }
+
+    .gps-status {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 900;
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 8px 16px rgba(245, 158, 11, 0.22);
+      font-size: 13px;
+    }
+
+    .btn.secondary {
+      background: white;
+      color: var(--primary-dark);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .btn.dark {
+      background: #111827;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: var(--red);
+      box-shadow: 0 8px 16px rgba(220, 38, 38, 0.16);
+    }
+
+    .btn.blue {
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.16);
+    }
+
+    .weather-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .toggle-btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--muted);
+      border-radius: 16px;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .toggle-btn.active.sunny {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #f59e0b;
+    }
+
+    .toggle-btn.active.snow {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: #60a5fa;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 12px;
+      border-radius: var(--radius);
+      padding: 13px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      box-shadow: var(--shadow);
+    }
+
+    .notice.show {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .notice-icon {
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .main-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .main-tab {
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 18px;
+      padding: 12px 6px;
+      color: var(--muted);
+      font-weight: 900;
+      box-shadow: var(--shadow);
+      min-height: 76px;
+    }
+
+    .main-tab .emoji {
+      display: block;
+      font-size: 23px;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .main-tab .count {
+      display: inline-block;
+      margin-left: 3px;
+      background: var(--red);
+      color: white;
+      border-radius: 999px;
+      min-width: 20px;
+      padding: 1px 5px;
+      font-size: 11px;
+    }
+
+    .main-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fade 0.18s ease-out;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 10px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.2;
+    }
+
+    .section-header p {
+      margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin: 12px 0;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .card h4 {
+      margin: 10px 0 6px;
+      font-size: 15px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .day-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 10px;
+      position: sticky;
+      top: 0;
+      background: rgba(255, 247, 237, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 5;
+    }
+
+    .day-btn {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: white;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .day-btn.active {
+      background: var(--primary-dark);
+      color: white;
+      border-color: var(--primary-dark);
+    }
+
+    .trip-item {
+      border-radius: 18px;
+      background: #fffaf0;
+      border: 1px solid #fde68a;
+      padding: 13px;
+      margin: 12px 0;
+    }
+
+    .trip-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .trip-time {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: white;
+      color: var(--primary-dark);
+      border: 1px solid var(--border);
+      font-weight: 900;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 8px 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      background: var(--blue-soft);
+      color: #1e40af;
+    }
+
+    .pill.green {
+      background: var(--green-soft);
+      color: #166534;
+    }
+
+    .pill.yellow {
+      background: var(--primary-soft);
+      color: #92400e;
+    }
+
+    .pill.red {
+      background: var(--red-soft);
+      color: #991b1b;
+    }
+
+    .pill.purple {
+      background: var(--purple-soft);
+      color: #5b21b6;
+    }
+
+    details {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 10px 11px;
+      margin: 9px 0;
+    }
+
+    summary {
+      font-weight: 950;
+      color: #111827;
+      cursor: pointer;
+    }
+
+    ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    .snow-alt {
+      display: none;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      border-radius: 16px;
+      padding: 11px;
+      margin-top: 9px;
+      font-size: 14px;
+    }
+
+    body.snow-mode .snow-alt {
+      display: block;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .search-row input,
+    .field,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 11px 12px;
+      background: white;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+    }
+
+    .spot-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .spot-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px;
+      box-shadow: 0 8px 18px rgba(120, 53, 15, 0.06);
+    }
+
+    .spot-card h3 {
+      font-size: 16px;
+    }
+
+    .coupon-card {
+      border-radius: 18px;
+      padding: 14px;
+      border: 2px dashed #f59e0b;
+      background: white;
+      margin: 12px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .coupon-card::after {
+      content: "🎟️";
+      position: absolute;
+      right: 12px;
+      bottom: -8px;
+      font-size: 58px;
+      opacity: 0.12;
+    }
+
+    .checklist label {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .checklist label:last-child {
+      border-bottom: 0;
+    }
+
+    input[type="checkbox"] {
+      width: 21px;
+      height: 21px;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
+    .check-text {
+      flex: 1;
+    }
+
+    .checklist label.done .check-text {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .budget-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .calc-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .summary-box {
+      background: var(--primary-soft);
+      border: 1px solid #fbbf24;
+      border-radius: 18px;
+      padding: 13px;
+      margin-top: 10px;
+      color: #78350f;
+      font-weight: 900;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #fff7ed;
+      color: #92400e;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 1080px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      z-index: 20;
+      padding: 7px 5px 10px;
+      box-shadow: 0 -8px 24px rgba(120, 53, 15, 0.12);
+    }
+
+    .bottom-nav button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 11px;
+      border-radius: 14px;
+      padding: 6px 2px;
+    }
+
+    .bottom-nav button.active {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+    }
+
+    .bottom-nav .emoji {
+      display: block;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.52);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 860px;
+      max-height: 92vh;
+      overflow: auto;
+      background: white;
+      border-radius: 26px;
+      box-shadow: 0 24px 60px rgba(17, 24, 39, 0.28);
+      padding: 16px;
+      animation: slideUp 0.18s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #111827;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .form-field label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #374151;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 94px;
+      transform: translateX(-50%);
+      background: #111827;
+      color: white;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 900;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 200;
+      transition: 0.2s ease;
+      max-width: 92%;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-5px);
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 9px;
+    }
+
+    .delete-btn {
+      border: 0;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 20px 4px;
+    }
+
+    @media (min-width: 760px) {
+      body {
+        padding-bottom: 20px;
+      }
+
+      .app-shell {
+        padding: 22px;
+      }
+
+      .hero-title h1 {
+        font-size: 31px;
+      }
+
+      .top-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .spot-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .budget-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-field.full {
+        grid-column: 1 / -1;
+      }
+
+      .bottom-nav {
+        position: sticky;
+        bottom: auto;
+        top: 8px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        margin-top: 14px;
+        margin-bottom: 16px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .main-tabs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .top-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-top {
+        flex-wrap: wrap;
+      }
+
+      .pwa-banner-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <div id="pwaBanner" class="pwa-banner">
+      <div class="pwa-banner-inner">
+        <div>
+          <strong>📲 安裝北海道助手</strong>
+          <span>安裝後可像 App 一樣開啟，並支援離線查看行程。</span>
+        </div>
+        <div class="btn-row" style="margin-top: 0;">
+          <button id="installBtn" class="btn">安裝</button>
+          <button class="btn dark" onclick="dismissInstallBanner()">稍後</button>
+        </div>
+      </div>
+    </div>
+
+    <header class="hero">
+      <div class="hero-top">
+        <div class="hero-icon">❄️</div>
+        <div class="hero-title">
+          <h1>北海道 7日6夜 🇯🇵</h1>
+          <p>Yi 完整 PWA 版 • 3位成人 • JR Inn札幌站南口 / 第一滝本館 / 定山溪萬世閣</p>
+        </div>
+        <div class="version-pill">PWA</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat">
+          <strong>7日</strong>
+          <span>2026/12/24–12/30</span>
+        </div>
+        <div class="stat">
+          <strong>4城</strong>
+          <span>札幌・小樽・登別・定山溪</span>
+        </div>
+        <div class="stat">
+          <strong>3位</strong>
+          <span>成人同行</span>
+        </div>
+        <div class="stat">
+          <strong>約¥42k</strong>
+          <span>3人基本交通</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="top-actions">
+      <div class="panel">
+        <div class="gps-box">
+          <div class="round-icon">📡</div>
+          <div>
+            <h3>GPS 定位</h3>
+            <p id="gpsStatus" class="gps-status">⚙️ 正在獲取目前 GPS 位置...</p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="getGps()">重新定位</button>
+          <button class="btn secondary" onclick="openModal('backupModal')">⚙️ 備份 / 重設</button>
+        </div>
+      </div>
+
+      <div class="panel weather-box">
+        <h3>天氣模式</h3>
+        <p class="muted">按天氣切換每日行程內嘅備案提示。</p>
+        <div class="weather-toggle">
+          <button id="sunnyBtn" class="toggle-btn sunny active" onclick="setWeatherMode('sunny')">☀️ 晴天原定</button>
+          <button id="snowBtn" class="toggle-btn snow" onclick="setWeatherMode('snow')">🌨️ 落雪備案</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="offlineNotice" class="notice">
+      <div class="notice-icon">📴</div>
+      <div>
+        <strong>目前處於離線狀態</strong>
+        你仍然可以查看已快取嘅行程及本機儲存資料。GPS、外部官方網站及即時資訊可能不能使用。
+      </div>
+    </div>
+
+    <div id="snowNotice" class="notice">
+      <div class="notice-icon">☔</div>
+      <div>
+        <strong>已開啟「落雪／惡劣天氣備案模式」</strong>
+        戶外景點已附上室內替代方案，亦可到「景點庫」搜尋室內景點，或查看每日卡片內的雪天備案。
+      </div>
+    </div>
+
+    <nav class="main-tabs">
+      <button class="main-tab active" data-view="days" onclick="showView('days')">
+        <span class="emoji">🗓️</span>每日行程
+      </button>
+      <button class="main-tab" data-view="spots" onclick="showView('spots')">
+        <span class="emoji">🗺️</span>景點庫
+      </button>
+      <button class="main-tab" data-view="coupons" onclick="showView('coupons')">
+        <span class="emoji">🎟️</span>優惠券
+      </button>
+      <button class="main-tab" data-view="booking" onclick="showView('booking')">
+        <span class="emoji">✅</span>必買預約 <span class="count" id="bookingCount">10</span>
+      </button>
+      <button class="main-tab" data-view="budget" onclick="showView('budget')">
+        <span class="emoji">💴</span>記帳換算
+      </button>
+    </nav>
+
+    <section id="days" class="view active">
+      <div class="section-header">
+        <div>
+          <h2>🗓️ 每日行程</h2>
+          <p>交通、景點、餐廳、雪天備案一次過睇。</p>
+        </div>
+        <button class="btn" onclick="openModal('addTripModal')">＋新增</button>
+      </div>
+
+      <div class="day-nav" id="dayNav"></div>
+      <div id="dayContent"></div>
+    </section>
+
+    <section id="spots" class="view">
+      <div class="section-header">
+        <div>
+          <h2>🗺️ 景點庫</h2>
+          <p>北海道景點、室內備案、餐飲購物快速搜尋。</p>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input id="spotSearch" type="search" placeholder="搜尋：札幌、小樽、室內、溫泉、夜景..." oninput="renderSpots()" />
+      </div>
+
+      <div id="spotGrid" class="spot-grid"></div>
+    </section>
+
+    <section id="coupons" class="view">
+      <div class="section-header">
+        <div>
+          <h2>🎟️ 優惠券 / 票券</h2>
+          <p>Pass、地鐵一日券、u-seat 參考。</p>
+        </div>
+      </div>
+
+      <div id="couponList"></div>
+    </section>
+
+    <section id="booking" class="view">
+      <div class="section-header">
+        <div>
+          <h2>✅ 必買預約</h2>
+          <p>剔選狀態會自動儲存在本機。</p>
+        </div>
+      </div>
+
+      <div class="card checklist" id="bookingList"></div>
+    </section>
+
+    <section id="budget" class="view">
+      <div class="section-header">
+        <div>
+          <h2>💴 記帳換算</h2>
+          <p>簡易日圓記帳，同時計算港幣估算。</p>
+        </div>
+        <button class="btn" onclick="addExpense()">＋新增開支</button>
+      </div>
+
+      <div class="budget-grid">
+        <div class="card">
+          <h3>匯率設定</h3>
+          <p class="muted">例：0.052 代表 ¥1 約 HK$0.052。可自行調整。</p>
+          <div class="calc-row">
+            <input id="rateInput" class="field" type="number" step="0.001" placeholder="HKD per JPY" />
+            <button class="btn blue" onclick="saveRate()">儲存匯率</button>
+          </div>
+          <div class="summary-box" id="budgetSummary">總額：¥0 / HK$0</div>
+        </div>
+
+        <div class="card">
+          <h3>交通預算參考</h3>
+          <table>
+            <tbody>
+              <tr>
+                <td>札幌–登別區域 Pass</td>
+                <td>¥30,000</td>
+              </tr>
+              <tr>
+                <td>機場 JR 來回</td>
+                <td>約 ¥7,200–7,800</td>
+              </tr>
+              <tr>
+                <td>白色戀人公園地鐵來回</td>
+                <td>約 ¥1,800</td>
+              </tr>
+              <tr>
+                <td>登別溫泉巴士來回</td>
+                <td>約 ¥3,000</td>
+              </tr>
+              <tr>
+                <td><strong>基本交通合計</strong></td>
+                <td><strong>約 ¥42,000–43,000</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>開支記錄</h3>
+        <div id="expenseList"></div>
+      </div>
+
+      <div class="card">
+        <h3>餐飲預算參考｜每位成人</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>餐廳 / 類型</th>
+              <th>每人預算</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Suage 湯咖喱</td>
+              <td>¥1,600–2,500</td>
+            </tr>
+            <tr>
+              <td>小樽政壽司</td>
+              <td>¥4,000–8,000</td>
+            </tr>
+            <tr>
+              <td>LeTAO 下午茶</td>
+              <td>¥1,000–2,000</td>
+            </tr>
+            <tr>
+              <td>だるま成吉思汗</td>
+              <td>¥4,000–6,500</td>
+            </tr>
+            <tr>
+              <td>根室花まる</td>
+              <td>¥2,500–4,500</td>
+            </tr>
+            <tr>
+              <td>拉麵</td>
+              <td>¥1,100–1,800</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      此 App 內容為行程助手草案。2026 年 12 月底實際班次、票價、站位、營業時間及預約條款，請以官方公布及確認信為準。
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="bottom-tab active" data-view="days" onclick="showView('days')">
+      <span class="emoji">🗓️</span>每日
+    </button>
+    <button class="bottom-tab" data-view="spots" onclick="showView('spots')">
+      <span class="emoji">🗺️</span>景點
+    </button>
+    <button class="bottom-tab" data-view="coupons" onclick="showView('coupons')">
+      <span class="emoji">🎟️</span>票券
+    </button>
+    <button class="bottom-tab" data-view="booking" onclick="showView('booking')">
+      <span class="emoji">✅</span>預約
+    </button>
+    <button class="bottom-tab" data-view="budget" onclick="showView('budget')">
+      <span class="emoji">💴</span>記帳
+    </button>
+  </nav>
+
+  <div id="addTripModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>新增行程項目</h2>
+        <button class="close-btn" onclick="closeModal('addTripModal')">×</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>所屬日子</label>
+          <select id="newDay"></select>
+        </div>
+
+        <div class="form-field">
+          <label>時間段 *</label>
+          <input id="newTime" class="field" placeholder="例如：早上 / 下午 / 18:30" />
+        </div>
+
+        <div class="form-field full">
+          <label>行程 / 景點名稱 *</label>
+          <input id="newTitle" class="field" placeholder="例如：札幌站購物" />
+        </div>
+
+        <div class="form-field full">
+          <label>🚆 乘車路線・線名・車程・車費／的士直達</label>
+          <textarea id="newTransport"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>乘搭路線 / 車種 / 的士</label>
+          <textarea id="newRoute"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>點搭 / 上落車站及轉車</label>
+          <textarea id="newHow"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>車程 / 班次</label>
+          <textarea id="newDuration"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>參考車費</label>
+          <textarea id="newCost"></textarea>
+        </div>
+
+        <div class="form-field full">
+          <label>✨ 重點特色 / 必玩必買亮點</label>
+          <textarea id="newHighlights"></textarea>
+        </div>
+
+        <div class="form-field full">
+          <label>🍜 附近網紅美食推介</label>
+          <textarea id="newFood"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>🏷️ 店舖優惠情報</label>
+          <textarea id="newDeals"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>📡 GPS 防迷路 / 出口 / 的士提示</label>
+          <textarea id="newGps"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>🎫 門票 / 預約提示</label>
+          <textarea id="newTickets"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>🌐 官方網站連結</label>
+          <textarea id="newLinks"></textarea>
+        </div>
+
+        <div class="form-field full">
+          <label>🌨️ 落雪／惡劣天氣室內替代方案（選填）</label>
+          <textarea id="newSnow"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" onclick="closeModal('addTripModal')">取消</button>
+        <button class="btn" onclick="saveNewTrip()">儲存行程</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="backupModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>⚙️ Yi 資料備份、匯入與重設</h2>
+        <button class="close-btn" onclick="closeModal('backupModal')">×</button>
+      </div>
+
+      <p class="muted">
+        所有修改、雪天切換、Checklist 剔選同日圓記帳均自動儲存在本機瀏覽器內（localStorage）。
+      </p>
+
+      <div class="btn-row">
+        <button class="btn blue" onclick="copyWhatsAppSummary()">📋 複製全行程＋交通車費摘要（貼去 WhatsApp）</button>
+        <button class="btn" onclick="copyBackupJson()">💾 複製 JSON 備份代碼</button>
+      </div>
+
+      <div class="form-field" style="margin-top: 12px;">
+        <label>📥 還原 JSON 備份代碼：</label>
+        <textarea id="importJson" placeholder="貼上 JSON 備份代碼"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn blue" onclick="importBackupJson()">匯入並覆蓋目前資料</button>
+        <button class="btn danger" onclick="resetAll()">🔄 重設為 Yi 初始完整資料</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">提示</div>
+
+  <script>
+    const STORAGE_KEY = "yi-hokkaido-panda-ui-v1";
+    const CHECK_PREFIX = "yi-hokkaido-check-";
+
+    const initialDays = [
+      {
+        id: "d1224",
+        label: "12/24",
+        title: "12/24 四｜新千歲機場 → 札幌 → 大通公園",
+        items: [
+          {
+            time: "下午 / 晚上",
+            title: "新千歲機場 → 札幌 → JR Inn札幌站南口 → 大通公園聖誕市集",
+            tags: ["JR Airport", "步行為主", "晚餐彈性"],
+            transport: "JR Airport 機場快速列車。",
+            route: "JR Airport｜新千歲機場站 → 札幌站。",
+            how: "國際線入境取行李後，跟「JR／鉄道」指示經連絡通道去國內線一側，再落地下 JR 站。札幌站南口出站後步行去 JR Inn札幌站南口。",
+            duration: "新千歲機場站 → 札幌站：約 40 分鐘。國際線到 JR 站預留約 15–20 分鐘。13:50 抵達，正常可目標 15:15–15:45 左右搭 JR；入境慢就順延。札幌站南口 → JR Inn札幌站南口：官方步行約 7 分鐘，雪地行李預 10–15 分鐘。",
+            cost: "機場 JR 另買。不包括在札幌–登別區域4日周遊券內。",
+            highlights: "第一日輕鬆適應天氣，晚上可去大通公園、札幌電視塔、聖誕市集，之後行去狸小路。",
+            food: "Suage 湯咖喱。推薦 Suage 4，miredo 商場 2 樓，近札幌站。建議食雞腿湯咖喱、炭燒羊肉湯咖喱、北海道蔬菜。預算每人約 ¥1,600–2,500。",
+            deals: "第一晚不建議訂需要信用卡擔保餐廳，保持彈性。",
+            gps: "札幌站南口出站；落雪拖行李請行地下通道或主路線，預留 10–15 分鐘。",
+            tickets: "無需預約。餐廳視排隊及精神狀態決定。",
+            links: "出發前請查 JR 北海道、札幌觀光、大通公園活動官方資訊。",
+            snow: "如大雪或太累，取消大通公園，只在札幌站、大丸、miredo、地下街晚餐購物。"
+          }
+        ]
+      },
+      {
+        id: "d1225",
+        label: "12/25",
+        title: "12/25 五｜札幌 → 南小樽 → 小樽 → 札幌",
+        items: [
+          {
+            time: "全日",
+            title: "札幌 → 南小樽 → 小樽音樂盒堂 → 堺町通 → 政壽司 → LeTAO → 小樽運河 → 札幌",
+            tags: ["Pass 啟用日", "政壽司午餐", "全日步行多"],
+            transport: "JR 函館本線 / 快速 Airport 小樽方向。",
+            route: "札幌站 → 南小樽站；小樽站 → 札幌站。",
+            how: "酒店步行 10–15 分鐘到札幌站。搭 JR 函館本線往小樽方向，確認列車停南小樽，唔好落錯小樽築港。回程由小樽站返札幌站。",
+            duration: "札幌站 → 南小樽站：約 35–50 分鐘。小樽站 → 札幌站：約 35–50 分鐘。建議約 17:00 離開小樽。",
+            cost: "建議使用「札幌–登別區域4日周遊券」，12/25–12/28 啟用。Pass 覆蓋小樽來回。",
+            highlights: "南小樽站落車順住玩：南小樽站 → 小樽音樂盒堂本館約 10 分鐘；音樂盒堂 → 堺町通慢慢行；下午 LeTAO 甜品；堺町通北端 → 小樽運河約 10–15 分鐘；小樽運河 → 小樽站約 10–15 分鐘。",
+            food: "おたる政寿司 ぜん庵午餐，建議 12:30 或 13:00，3位。建議食握壽司套餐、帆立貝、吞拿魚、甜蝦，海膽按當日價錢決定。預算每人約 ¥4,000–8,000。LeTAO Double Fromage 雙層芝士蛋糕，預算每人約 ¥1,000–2,000。晚餐可返札幌食味噌拉麵。",
+            deals: "LeTAO 可留意免稅／套裝禮盒；餐廳優惠以當日店舖公布為準。",
+            gps: "冬天每段步行多預留 5–10 分鐘，穿防滑鞋，間中入咖啡店取暖。小樽街道斜路多，拖喼不建議。",
+            tickets: "おたる政寿司ぜん庵建議預約。LeTAO 咖啡座可能排隊，3人可先叫兩件蛋糕分享。",
+            links: "出發前查 JR 北海道、小樽觀光、政壽司、LeTAO 官方資訊。",
+            snow: "如大雪，縮短戶外運河時間；主攻音樂盒堂、LeTAO、堺町通店舖、壽司午餐。嚴重惡劣天氣可改留札幌站商場及地下街。"
+          }
+        ]
+      },
+      {
+        id: "d1226",
+        label: "12/26",
+        title: "12/26 六｜白色戀人公園 → 狸小路 → 藻岩山",
+        items: [
+          {
+            time: "早上 / 下午 / 晚上",
+            title: "白色戀人公園 → 狸小路 → 藻岩山夜景",
+            tags: ["地鐵東西線", "週末一日券", "藻岩山看天氣"],
+            transport: "札幌地下鐵東西線 / 市電 / 藻岩山纜車 / 的士備選。",
+            route: "酒店 → 大通站 → 宮之澤站 → 白色戀人公園；白色戀人公園 → 狸小路；薄野市電 → ロープウェイ入口 → 接駁車 → 纜車 → Morris Car；或 3 人方便路線：的士到藻岩山纜車山麓站。",
+            how: "酒店步行 10–15 分鐘到大通站。大通站搭地鐵東西線，宮之澤方向。宮之澤站下車，通常 5 號出口方向，步行約 7–10 分鐘到公園。",
+            duration: "酒店 → 白色戀人公園總時間約 40–50 分鐘。白色戀人公園 → 狸小路：約 35–45 分鐘。薄野到藻岩山山頂預留 60–90 分鐘。的士到藻岩山纜車山麓站約 20–30 分鐘，再搭纜車。",
+            cost: "12/26 是星期六，可比較地下鐵「ドニチカキップ」週末一日券與單買。地鐵券不包市電、巴士、藻岩山纜車。",
+            highlights: "白色戀人公園朱古力主題園區、手信、甜品。狸小路購物。藻岩山夜景只在天氣好、風不大、纜車正常時前往。",
+            food: "白色戀人公園甜品。晚上可安排羊肉或札幌市中心餐廳。如想食成吉思汗，可考慮だるま，但如同藻岩山同晚安排，要避免不可取消預約。",
+            deals: "白色戀人手信可留意園區套裝及免稅安排。",
+            gps: "宮之澤站通常 5 號出口方向前往白色戀人公園。藻岩山如多人同行，3人可考慮的士直達纜車山麓站，省轉車時間。",
+            tickets: "白色戀人公園製作體驗如想玩就預約；普通參觀一般現場買票，但仍要查開放時間。藻岩山出發前查纜車是否營運。",
+            links: "出發前查白色戀人公園、藻岩山纜車、札幌市交通官方資訊。",
+            snow: "大雪、大風或纜車停駛，取消藻岩山，留市中心食飯、狸小路、札幌站商場、大丸、地下街購物。"
+          }
+        ]
+      },
+      {
+        id: "d1227",
+        label: "12/27",
+        title: "12/27 日｜札幌 → 登別 → 第一滝本館",
+        items: [
+          {
+            time: "早上 / 下午 / 晚上",
+            title: "札幌 → 登別 → 第一滝本館 → 地獄谷",
+            tags: ["特急指定席", "溫泉日", "大行李寄札幌"],
+            transport: "JR 特急北斗 / 特急鈴蘭 + 道南巴士或的士。",
+            route: "札幌站 → 登別站：特急北斗／鈴蘭；登別站 → 第一滝本館：道南巴士或的士。",
+            how: "早餐退房，問酒店可否寄存大行李至 12/29。札幌站搭特急，揀直達停登別班次，訂票時終點直接輸入「登別」。到登別站後轉道南巴士或的士到第一滝本館。",
+            duration: "札幌站 → 登別站：約 1 小時 15 分–1 小時 30 分。建議 09:00–10:00 出發，10:30–11:30 到登別。登別站 → 第一滝本館：巴士約 15–20 分鐘，的士約 15–20 分鐘。",
+            cost: "建議使用札幌–登別區域4日周遊券。登別站至溫泉巴士另計，請備日圓現金。",
+            highlights: "第一滝本館溫泉。地獄谷入口由第一滝本館步行約 5–10 分鐘。到埗後只行當日開放路段，唔好沿結冰步道追大湯沼。",
+            food: "午餐可在登別溫泉街簡單食蕎麥麵／定食。晚餐以酒店為主。",
+            deals: "溫泉街手信店可留意鬼主題商品、北海道零食。",
+            gps: "登別站出站後確認巴士往登別溫泉方向。如遇大雪、等車太耐或有行李，3位成人可考慮的士。",
+            tickets: "JR 指定席需預約。確認第一滝本館是否一泊二食、晚餐時段、最遲入場時間。",
+            links: "出發前查 JR 北海道、道南巴士、第一滝本館、登別觀光官方資訊。",
+            snow: "如天氣差，取消地獄谷散步，直接留酒店浸溫泉、休息、用餐。"
+          }
+        ]
+      },
+      {
+        id: "d1228",
+        label: "12/28",
+        title: "12/28 一｜第一滝本館 → 札幌 → 定山溪萬世閣",
+        items: [
+          {
+            time: "早上 / 中午 / 下午",
+            title: "第一滝本館 → 登別站 → 札幌站 → 定山溪萬世閣",
+            tags: ["全程最重要移動日", "JR 回札幌", "酒店接駁"],
+            transport: "道南巴士或的士 + JR 特急北斗／鈴蘭 + 萬世閣酒店接駁巴士。",
+            route: "第一滝本館 → 登別站：巴士或的士；登別站 → 札幌站：特急北斗／鈴蘭；札幌站北口 → 定山溪萬世閣：酒店接駁巴士。",
+            how: "早餐後提早離開第一滝本館。由登別站搭特急返札幌站。午餐後，14:00 到札幌站北口找萬世閣接駁工作人員。萬世閣去程接駁 14:30 札幌站北口出發，完全預約制。",
+            duration: "登別站 → 札幌站：約 1 小時 15 分–1 小時 30 分。目標 11:30–12:00 前後到札幌。唔建議揀 13 點幾先到札幌嘅 JR。冬天請留延誤空間。",
+            cost: "JR 使用札幌–登別區域4日周遊券。萬世閣酒店接駁如已預約，一般按酒店安排。如趕唔切或接駁滿座，需另搭じょうてつ巴士往定山溪溫泉方向。",
+            highlights: "全程最重要移動日。重點不是玩景點，而是安全準時由登別移動到定山溪。抵達萬世閣後浸溫泉、休息。",
+            food: "札幌站附近快食午餐。萬世閣晚餐以酒店為主，需核對是否包餐。",
+            deals: "無特別優惠；以準時接駁優先。",
+            gps: "札幌站北口集合，建議 14:00 到達，不要壓 14:30。如 JR 延誤，盡快聯絡酒店。若改搭じょうてつ巴士，萬世閣官方目前建議下車站：「定山渓」；札幌上車點可能因工程改動，出發前要再查。",
+            tickets: "必須預約萬世閣接駁巴士。JR 指定席需預約。確認定山溪萬世閣是否包晚餐、用餐時段、延誤安排。",
+            links: "出發前查 JR 北海道、萬世閣、じょうてつ巴士官方資訊。",
+            snow: "如天氣差，取消所有中途購物；直接由登別早走返札幌，優先確保能接上萬世閣巴士。必要時改用定山溪路線巴士或的士。"
+          }
+        ]
+      },
+      {
+        id: "d1229",
+        label: "12/29",
+        title: "12/29 二｜定山溪萬世閣 → 札幌 → 市內購物",
+        items: [
+          {
+            time: "早上 / 中午 / 下午 / 晚上",
+            title: "定山溪萬世閣 → 札幌 → JR Inn札幌站南口 → 北海道廳舊本廳舍 → 札幌站商場 / 大通 / 狸小路 → だるま7.4店",
+            tags: ["接駁回札幌", "花まる壽司", "購物日"],
+            transport: "萬世閣酒店接駁巴士 + 市中心步行。",
+            route: "10:00 酒店接駁：定山溪萬世閣 → 札幌；市內以步行、地下步行空間為主。",
+            how: "09:40–09:45 帶齊行李到酒店指定集合位置。10:00 乘已預約酒店接駁回札幌。抵達札幌後步行約 15–20 分鐘去 JR Inn札幌站南口寄存行李。",
+            duration: "正常 11:00–11:30 抵達札幌，冬天可更遲。北海道廳舊本廳舍：由酒店步行約 15–20 分鐘。大丸／札幌站商場：步行方便。大通／狸小路：沿地下步行空間、Pole Town 約 20–30 分鐘。",
+            cost: "如已預約酒店接駁，市內大部分可步行。呢日大部分景點可步行，唔需要特登買交通一日券。",
+            highlights: "札幌市內購物補完日。大丸、札幌站商場、地下街、狸小路。北海道廳舊本廳舍可視乎時間及天氣前往。",
+            food: "午餐可試根室花まる JR Tower Stellar Place 店，札幌站商場 6 樓。不接受訂位，現場取號排隊；預算每人約 ¥2,500–4,500。晚餐建議成吉思汗だるま7.4店，18:30，3位。預算每人約 ¥4,000–6,500。7.4店接受網上預約；5.5店不接受預約。",
+            deals: "札幌站商場、大丸、狸小路可留意退稅。手信可買北海道零食、白色戀人、六花亭、Royce 等。",
+            gps: "由札幌站、大通、狸小路之間盡量使用地下步行空間，減少雪地步行。如購物太多可搭的士返酒店。",
+            tickets: "だるま7.4店建議預約 18:30，3位。根室花まる不接受訂位，現場取號排隊。",
+            links: "出發前查萬世閣、根室花まる、だるま、大丸／札幌站商場官方資訊。",
+            snow: "取消北海道廳舊本廳舍戶外部分，集中札幌站商場、大丸、地下街、狸小路室內購物及餐廳。"
+          }
+        ]
+      },
+      {
+        id: "d1230",
+        label: "12/30",
+        title: "12/30 三｜札幌 → 新千歲機場 → 香港",
+        items: [
+          {
+            time: "早上 / 中午 / 下午",
+            title: "JR Inn札幌站南口 → 札幌站 → 新千歲機場 → 香港",
+            tags: ["JR Airport", "機場購物", "16:00 起飛"],
+            transport: "JR Airport 機場快速列車。",
+            route: "札幌站 → 新千歲機場站：JR Airport。",
+            how: "建議 10:00–10:30 退房。雪地拖行李預 15 分鐘去 JR 札幌站。札幌 → 新千歲機場時，一定確認目的地係「新千歲機場」。到新千歲機場站後，跟 International Terminal／国際線 指示前往國際線。",
+            duration: "目標搭約 11:00 左右 JR Airport。札幌站 → 新千歲機場站：約 40 分鐘。出站後到國際線預留 15–20 分鐘。16:00 起飛，建議 12:00 前後到機場區域。",
+            cost: "機場 JR 另買。不包括在札幌–登別區域4日周遊券內。3人機場 JR 來回估算約 ¥7,200–7,800。",
+            highlights: "新千歲機場最後購物，手信、零食、機場餐廳。",
+            food: "機場餐廳及手信店主要集中國內線一側。北海道拉麵道場可食えびそば一幻或白樺山荘。也可考慮機場海鮮。拉麵預算每人約 ¥1,100–1,800。",
+            deals: "機場手信店可留意免稅限制及行李容量。",
+            gps: "JR 新千歲機場站在國內線側，去國際線需步行一段，預留 15–20 分鐘。唔好購物到最後一刻，報到、安檢時間優先。",
+            tickets: "普通座毋須預約；想 3 人坐埋可訂 u-seat。有大雪預報就再提早出發。",
+            links: "出發前查 JR 北海道、新千歲機場、航空公司官方資訊。",
+            snow: "提早離開札幌，減少市內活動，直接去新千歲機場等候及購物。"
+          }
+        ]
+      }
+    ];
+
+    const initialSpots = [
+      ["新千歲機場", "交通 / 手信 / 美食", "新千歲", "北海道主要國際機場，有拉麵道場、手信店、Royce、海鮮餐廳。", "JR 新千歲機場站直達札幌站約 40 分鐘。", "本身室內，非常適合惡劣天氣時提早到達。"],
+      ["札幌站 / 大丸 / JR Tower", "購物 / 餐飲 / 室內", "札幌", "購物、餐廳、地下街連接方便。根室花まる JR Tower Stellar Place 店在札幌站商場 6 樓。", "JR 札幌站直達。", "極佳室內備案。"],
+      ["大通公園 / 札幌電視塔", "景點 / 夜景 / 活動", "札幌", "聖誕市集、冬日燈飾、札幌電視塔。", "酒店步行約 10–15 分鐘；亦可地鐵到大通站。", "大雪或太凍可改去地下街、札幌站商場。"],
+      ["狸小路商店街", "購物 / 餐飲 / 半室內", "札幌", "藥妝、手信、餐廳集中，雨雪天仍較易行。", "大通步行約 5–10 分鐘。", "本身適合雨雪天。"],
+      ["白色戀人公園", "甜品 / 主題園區 / 手信", "札幌宮之澤", "白色戀人主題園區、朱古力、甜品、手信。", "大通站搭地鐵東西線至宮之澤站，步行約 7–10 分鐘。", "部分室內，惡劣天氣可只玩室內及購物。"],
+      ["藻岩山", "夜景 / 戶外 / 纜車", "札幌", "札幌夜景名所。", "薄野市電 → ロープウェイ入口 → 接駁車 → 纜車 → Morris Car；或的士到山麓站。", "大雪、大風、能見度差或纜車停駛即取消。"],
+      ["小樽音樂盒堂本館", "購物 / 室內 / 小樽", "小樽", "音樂盒、手信、歷史建築感。", "南小樽站步行約 10 分鐘。", "室內景點，適合雪天。"],
+      ["小樽堺町通", "購物 / 美食 / 半戶外", "小樽", "LeTAO、玻璃工藝、甜品、手信店集中。", "南小樽站至小樽運河之間步行遊覽。", "縮短戶外步行，多入店舖。"],
+      ["小樽運河", "景點 / 拍照 / 戶外", "小樽", "冬天雪景、運河倉庫群。", "堺町通北端步行約 10–15 分鐘，小樽站步行約 10–15 分鐘。", "大雪或路滑時只短暫拍照，不長時間逗留。"],
+      ["登別地獄谷", "自然景點 / 戶外 / 溫泉", "登別", "火山地形、硫磺煙、溫泉區代表景點。", "第一滝本館步行約 5–10 分鐘。", "只行開放路段；結冰或天氣差就取消，留酒店溫泉。"],
+      ["第一滝本館", "住宿 / 溫泉", "登別", "大型溫泉旅館，適合溫泉休息日。", "登別站轉巴士或的士約 15–20 分鐘。", "本身為室內溫泉備案。"],
+      ["定山溪萬世閣", "住宿 / 溫泉", "定山溪", "定山溪溫泉酒店，使用酒店接駁較穩陣。", "札幌站北口 14:30 酒店接駁，完全預約制。", "本身為室內溫泉備案。"]
+    ];
+
+    const coupons = [
+      {
+        title: "JR 札幌–登別區域4日周遊券",
+        body: [
+          "建議啟用：12/25–12/28。",
+          "覆蓋：小樽來回、札幌 → 登別、登別 → 札幌。",
+          "不包：12/24 新千歲機場 → 札幌、12/30 札幌 → 新千歲機場、登別溫泉巴士、札幌市內地下鐵、市電、巴士、藻岩山交通及纜車、定山溪路線巴士。",
+          "價錢：成人境外預購價 ¥10,000；日本國內購買 ¥11,000；3人預購合共 ¥30,000。",
+          "提示：有 Pass 都要先取票／預約特急指定席。"
+        ]
+      },
+      {
+        title: "札幌地下鐵週末一日券 ドニチカキップ",
+        body: [
+          "適用日期：12/26 星期六可考慮。",
+          "適用：札幌市營地下鐵。",
+          "不適用：JR、市電、巴士、藻岩山纜車。",
+          "如果當日只坐大通 ↔ 宮之澤來回，請出發前比較單買與一日券價錢。"
+        ]
+      },
+      {
+        title: "JR Airport u-seat",
+        body: [
+          "適用：新千歲機場 ↔ 札幌。",
+          "用途：想 3 人坐埋可考慮。",
+          "普通座毋須預約；12/24、12/30 如行李多或想安心，可考慮 u-seat。"
+        ]
+      }
+    ];
+
+    const bookings = [
+      ["manseikaku-bus", "萬世閣接駁巴士", "12/28 14:30 札幌站北口 → 萬世閣，3位；12/29 10:00 酒店 → 札幌，3位。必須預約。"],
+      ["jr-1227", "JR 指定席｜12/27", "札幌 → 登別，特急北斗／鈴蘭，3位。建議 09:00–10:00 出發。"],
+      ["jr-1228", "JR 指定席｜12/28", "登別 → 札幌，特急北斗／鈴蘭，3位。目標 11:30–12:00 前後到札幌。"],
+      ["jr-pass", "札幌–登別區域4日周遊券", "12/25–12/28 啟用，成人 3 位。境外預購成人 ¥10,000 × 3 = ¥30,000。"],
+      ["otaru-sushi", "小樽政壽司ぜん庵", "12/25 12:30 或 13:00，3位。建議預約。"],
+      ["daruma", "成吉思汗だるま7.4店", "建議 12/29 18:30，3位。7.4店接受網上預約；5.5店不接受預約。"],
+      ["luggage", "札幌酒店行李寄存", "問 JR Inn札幌站南口可否 12/27–12/29 跨晚寄存大行李。"],
+      ["takimoto-dinner", "第一滝本館晚餐", "確認是否一泊二食、晚餐時段、最遲入場時間。"],
+      ["jozankei-dinner", "定山溪萬世閣晚餐", "確認是否包晚餐、用餐時段、延誤安排。"],
+      ["shiroi-koibito", "白色戀人公園製作體驗", "如想玩製作體驗就預約；普通參觀一般現場買票但仍要查開放時間。"]
+    ];
+
+    let state = {
+      days: structuredClone(initialDays),
+      selectedDay: "d1224",
+      weather: "sunny",
+      rate: 0.052,
+      expenses: [
+        { name: "札幌–登別區域 Pass 3人", yen: 30000 },
+        { name: "機場 JR 來回估算", yen: 7500 },
+        { name: "白色戀人地鐵估算", yen: 1800 },
+        { name: "登別溫泉巴士估算", yen: 3000 }
+      ]
+    };
+
+    let deferredInstallPrompt = null;
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {}
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = {
+            ...state,
+            ...parsed,
+            days: parsed.days || structuredClone(initialDays),
+            expenses: parsed.expenses || state.expenses
+          };
+        }
+      } catch (error) {}
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll(".view").forEach(view => {
+        view.classList.toggle("active", view.id === viewId);
+      });
+
+      document.querySelectorAll(".main-tab, .bottom-tab").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === viewId);
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setWeatherMode(mode) {
+      state.weather = mode;
+      saveState();
+
+      document.body.classList.toggle("snow-mode", mode === "snow");
+      document.getElementById("sunnyBtn").classList.toggle("active", mode === "sunny");
+      document.getElementById("snowBtn").classList.toggle("active", mode === "snow");
+      document.getElementById("snowNotice").classList.toggle("show", mode === "snow");
+
+      showToast(mode === "snow" ? "已切換至落雪備案模式" : "已切換至晴天原定模式");
+    }
+
+    function renderDayNav() {
+      const nav = document.getElementById("dayNav");
+      nav.innerHTML = "";
+
+      state.days.forEach(day => {
+        const btn = document.createElement("button");
+        btn.className = "day-btn" + (day.id === state.selectedDay ? " active" : "");
+        btn.textContent = day.label;
+        btn.onclick = () => {
+          state.selectedDay = day.id;
+          saveState();
+          renderDays();
+        };
+        nav.appendChild(btn);
+      });
+
+      const select = document.getElementById("newDay");
+      select.innerHTML = "";
+      state.days.forEach(day => {
+        const option = document.createElement("option");
+        option.value = day.id;
+        option.textContent = day.title;
+        select.appendChild(option);
+      });
+    }
+
+    function paragraphToList(text) {
+      if (!text) return "";
+      const parts = text.split("。").map(s => s.trim()).filter(Boolean);
+      if (parts.length <= 1) return "<p>" + escapeHtml(text) + "</p>";
+      return "<ul>" + parts.map(p => "<li>" + escapeHtml(p) + "。</li>").join("") + "</ul>";
+    }
+
+    function renderDays() {
+      renderDayNav();
+
+      const day = state.days.find(d => d.id === state.selectedDay) || state.days[0];
+      const content = document.getElementById("dayContent");
+
+      content.innerHTML = `
+        <div class="card">
+          <h3>${escapeHtml(day.title)}</h3>
+          <p class="muted">點開各項可查看交通、車費、餐廳、GPS 提示及雪天備案。</p>
+          ${day.items.map((item, index) => renderTripItem(item, index, day.id)).join("")}
+        </div>
+      `;
+    }
+
+    function renderTripItem(item, index, dayId) {
+      const tagsHtml = (item.tags || []).map((tag, i) => {
+        const classes = ["pill", "pill green", "pill yellow", "pill red", "pill purple"];
+        return `<span class="${classes[i % classes.length]}">${escapeHtml(tag)}</span>`;
+      }).join("");
+
+      const deleteBtn = item.custom ? `<button class="delete-btn" onclick="deleteTripItem('${dayId}', ${index})">刪除</button>` : "";
+
+      return `
+        <div class="trip-item">
+          <div class="trip-top">
+            <div>
+              <span class="trip-time">⏰ ${escapeHtml(item.time || "未設定")}</span>
+              <h3 style="margin-top:8px;">${escapeHtml(item.title)}</h3>
+            </div>
+            ${deleteBtn}
+          </div>
+
+          <div class="pill-row">${tagsHtml}</div>
+
+          <details open>
+            <summary>🚆 乘車路線・線名・車程・車費／的士直達</summary>
+            ${paragraphToList(item.transport)}
+          </details>
+
+          <details>
+            <summary>乘搭路線 / 車種 / 的士</summary>
+            ${paragraphToList(item.route)}
+          </details>
+
+          <details>
+            <summary>點搭 / 上落車站及轉車</summary>
+            ${paragraphToList(item.how)}
+          </details>
+
+          <details>
+            <summary>車程 / 班次</summary>
+            ${paragraphToList(item.duration)}
+          </details>
+
+          <details>
+            <summary>參考車費</summary>
+            ${paragraphToList(item.cost)}
+          </details>
+
+          <details>
+            <summary>✨ 重點特色 / 必玩必買亮點</summary>
+            ${paragraphToList(item.highlights)}
+          </details>
+
+          <details>
+            <summary>🍜 附近網紅美食推介</summary>
+            ${paragraphToList(item.food)}
+          </details>
+
+          <details>
+            <summary>🏷️ 店舖優惠情報</summary>
+            ${paragraphToList(item.deals)}
+          </details>
+
+          <details>
+            <summary>📡 GPS 防迷路 / 出口 / 的士提示</summary>
+            ${paragraphToList(item.gps)}
+          </details>
+
+          <details>
+            <summary>🎫 門票 / 預約提示</summary>
+            ${paragraphToList(item.tickets)}
+          </details>
+
+          <details>
+            <summary>🌐 官方網站連結</summary>
+            ${paragraphToList(item.links)}
+          </details>
+
+          <div class="snow-alt">
+            <strong>🌨️ 落雪／惡劣天氣室內替代方案</strong>
+            ${paragraphToList(item.snow)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSpots() {
+      const keyword = document.getElementById("spotSearch").value.trim().toLowerCase();
+      const grid = document.getElementById("spotGrid");
+
+      const filtered = initialSpots.filter(spot => {
+        const haystack = spot.join(" ").toLowerCase();
+        return haystack.includes(keyword);
+      });
+
+      grid.innerHTML = filtered.map(spot => `
+        <div class="spot-card">
+          <h3>${escapeHtml(spot[0])}</h3>
+          <div class="pill-row">
+            <span class="pill yellow">${escapeHtml(spot[1])}</span>
+            <span class="pill">${escapeHtml(spot[2])}</span>
+          </div>
+          <p>${escapeHtml(spot[3])}</p>
+          <details>
+            <summary>交通</summary>
+            <p>${escapeHtml(spot[4])}</p>
+          </details>
+          <details>
+            <summary>雨雪備案</summary>
+            <p>${escapeHtml(spot[5])}</p>
+          </details>
+          <div class="mini-actions">
+            <button class="btn secondary" onclick="prefillTrip('${escapeJs(spot[0])}', '${escapeJs(spot[3])}', '${escapeJs(spot[4])}', '${escapeJs(spot[5])}')">➕ 加入每日行程表</button>
+          </div>
+        </div>
+      `).join("") || `<div class="card">找不到相關景點。</div>`;
+    }
+
+    function renderCoupons() {
+      const list = document.getElementById("couponList");
+      list.innerHTML = coupons.map(coupon => `
+        <div class="coupon-card">
+          <h3>${escapeHtml(coupon.title)}</h3>
+          <ul>
+            ${coupon.body.map(line => `<li>${escapeHtml(line)}</li>`).join("")}
+          </ul>
+        </div>
+      `).join("");
+    }
+
+    function renderBookings() {
+      const list = document.getElementById("bookingList");
+      list.innerHTML = bookings.map(item => {
+        const key = CHECK_PREFIX + item[0];
+        let checked = false;
+        try {
+          checked = localStorage.getItem(key) === "true";
+        } catch (error) {}
+
+        return `
+          <label class="${checked ? "done" : ""}">
+            <input type="checkbox" data-key="${escapeHtml(item[0])}" ${checked ? "checked" : ""} onchange="toggleBooking(this)">
+            <span class="check-text">
+              <strong>${escapeHtml(item[1])}</strong><br>
+              <span class="muted">${escapeHtml(item[2])}</span>
+            </span>
+          </label>
+        `;
+      }).join("");
+      updateBookingCount();
+    }
+
+    function toggleBooking(checkbox) {
+      const key = CHECK_PREFIX + checkbox.dataset.key;
+      checkbox.closest("label").classList.toggle("done", checkbox.checked);
+      try {
+        localStorage.setItem(key, checkbox.checked ? "true" : "false");
+      } catch (error) {}
+      updateBookingCount();
+    }
+
+    function updateBookingCount() {
+      let remain = 0;
+      bookings.forEach(item => {
+        try {
+          if (localStorage.getItem(CHECK_PREFIX + item[0]) !== "true") remain++;
+        } catch (error) {
+          remain++;
+        }
+      });
+      document.getElementById("bookingCount").textContent = remain;
+    }
+
+    function renderBudget() {
+      document.getElementById("rateInput").value = state.rate;
+
+      const list = document.getElementById("expenseList");
+      if (!state.expenses.length) {
+        list.innerHTML = `<p class="muted">未有開支記錄。</p>`;
+      } else {
+        list.innerHTML = state.expenses.map((expense, index) => `
+          <div class="trip-item">
+            <div class="trip-top">
+              <div>
+                <strong>${escapeHtml(expense.name)}</strong>
+                <p class="muted" style="margin:4px 0 0;">¥${Number(expense.yen).toLocaleString()} / 約 HK$${Math.round(Number(expense.yen) * state.rate).toLocaleString()}</p>
+              </div>
+              <button class="delete-btn" onclick="deleteExpense(${index})">刪除</button>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      const totalYen = state.expenses.reduce((sum, e) => sum + Number(e.yen || 0), 0);
+      const totalHkd = Math.round(totalYen * state.rate);
+
+      document.getElementById("budgetSummary").textContent =
+        `總額：¥${totalYen.toLocaleString()} / 約 HK$${totalHkd.toLocaleString()}`;
+    }
+
+    function saveRate() {
+      const value = Number(document.getElementById("rateInput").value);
+      if (!value || value <= 0) {
+        showToast("請輸入有效匯率");
+        return;
+      }
+      state.rate = value;
+      saveState();
+      renderBudget();
+      showToast("匯率已儲存");
+    }
+
+    function addExpense() {
+      const name = window.prompt ? prompt("開支名稱：", "餐飲 / 交通 / 購物") : "";
+      if (!name) return;
+      const yenText = window.prompt ? prompt("日圓金額：", "1000") : "";
+      const yen = Number(yenText);
+      if (!yen || yen <= 0) {
+        showToast("請輸入有效日圓金額");
+        return;
+      }
+
+      state.expenses.push({ name, yen });
+      saveState();
+      renderBudget();
+      showToast("已新增開支");
+    }
+
+    function deleteExpense(index) {
+      state.expenses.splice(index, 1);
+      saveState();
+      renderBudget();
+      showToast("已刪除開支");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("show");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("show");
+    }
+
+    function saveNewTrip() {
+      const dayId = document.getElementById("newDay").value;
+      const time = document.getElementById("newTime").value.trim();
+      const title = document.getElementById("newTitle").value.trim();
+
+      if (!time || !title) {
+        showToast("請填寫時間段及行程名稱");
+        return;
+      }
+
+      const day = state.days.find(d => d.id === dayId);
+      day.items.push({
+        time,
+        title,
+        tags: ["自訂行程"],
+        transport: valueOf("newTransport"),
+        route: valueOf("newRoute"),
+        how: valueOf("newHow"),
+        duration: valueOf("newDuration"),
+        cost: valueOf("newCost"),
+        highlights: valueOf("newHighlights"),
+        food: valueOf("newFood"),
+        deals: valueOf("newDeals"),
+        gps: valueOf("newGps"),
+        tickets: valueOf("newTickets"),
+        links: valueOf("newLinks"),
+        snow: valueOf("newSnow"),
+        custom: true
+      });
+
+      state.selectedDay = dayId;
+      saveState();
+      clearNewTripForm();
+      closeModal("addTripModal");
+      renderDays();
+      showView("days");
+      showToast("已儲存行程");
+    }
+
+    function valueOf(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function clearNewTripForm() {
+      [
+        "newTime", "newTitle", "newTransport", "newRoute", "newHow", "newDuration",
+        "newCost", "newHighlights", "newFood", "newDeals", "newGps", "newTickets",
+        "newLinks", "newSnow"
+      ].forEach(id => document.getElementById(id).value = "");
+    }
+
+    function deleteTripItem(dayId, index) {
+      const day = state.days.find(d => d.id === dayId);
+      if (!day) return;
+      day.items.splice(index, 1);
+      saveState();
+      renderDays();
+      showToast("已刪除自訂行程");
+    }
+
+    function prefillTrip(title, highlights, transport, snow) {
+      document.getElementById("newDay").value = state.selectedDay;
+      document.getElementById("newTime").value = "自訂時間";
+      document.getElementById("newTitle").value = title;
+      document.getElementById("newHighlights").value = highlights;
+      document.getElementById("newTransport").value = transport;
+      document.getElementById("newSnow").value = snow;
+      openModal("addTripModal");
+    }
+
+    function copyWhatsAppSummary() {
+      const text = buildWhatsAppSummary();
+      copyText(text);
+    }
+
+    function buildWhatsAppSummary() {
+      return `北海道 7日6夜｜Yi｜3位成人
+2026/12/24–12/30
+住宿：JR Inn札幌站南口 / 第一滝本館 / 定山溪萬世閣
+
+12/24 四
+新千歲機場 → 札幌
+JR Airport 約40分鐘，機場JR另買
+入住 JR Inn札幌站南口
+晚上大通公園 / 札幌電視塔 / Suage湯咖喱
+
+12/25 五
+札幌 → 南小樽 → 小樽 → 札幌
+JR 約35–50分鐘
+用札幌–登別區域4日周遊券
+音樂盒堂、堺町通、政壽司、LeTAO、小樽運河
+政壽司建議 12:30 或 13:00 預約
+
+12/26 六
+白色戀人公園 → 狸小路 → 藻岩山
+大通搭地鐵東西線去宮之澤
+週六可比較ドニチカキップ
+藻岩山只在天氣好及纜車正常時去
+
+12/27 日
+札幌 → 登別 → 第一滝本館
+特急北斗／鈴蘭約1小時15分–1小時30分
+建議09:00–10:00出發
+登別站轉巴士或的士去酒店
+大行李盡量寄札幌
+
+12/28 一
+第一滝本館 → 登別 → 札幌 → 定山溪萬世閣
+全程最重要移動日
+目標11:30–12:00到札幌
+14:00到札幌站北口集合
+14:30萬世閣接駁巴士，必須預約
+
+12/29 二
+定山溪萬世閣 → 札幌
+10:00酒店接駁回札幌
+寄存行李後札幌站、大丸、大通、狸小路購物
+午餐根室花まる
+晚餐だるま7.4店建議18:30預約
+
+12/30 三
+札幌 → 新千歲機場 → 香港
+建議10:00–10:30退房
+約11:00搭JR Airport
+約12:00前後到機場
+16:00起飛
+機場拉麵道場 / 手信
+
+交通預算：
+札幌–登別區域Pass 3人 ¥30,000
+機場JR來回約 ¥7,200–7,800
+白色戀人地鐵約 ¥1,800
+登別溫泉巴士約 ¥3,000
+基本交通合計約 ¥42,000–43,000
+另計藻岩山、的士、u-seat、餐飲購物`;
+    }
+
+    function copyBackupJson() {
+      const data = {
+        state,
+        checks: bookings.reduce((obj, item) => {
+          try {
+            obj[item[0]] = localStorage.getItem(CHECK_PREFIX + item[0]) === "true";
+          } catch (error) {
+            obj[item[0]] = false;
+          }
+          return obj;
+        }, {})
+      };
+
+      copyText(JSON.stringify(data, null, 2));
+    }
+
+    function importBackupJson() {
+      const raw = document.getElementById("importJson").value.trim();
+      if (!raw) {
+        showToast("請貼上 JSON 備份代碼");
+        return;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+        if (data.state) {
+          state = data.state;
+          saveState();
+        }
+
+        if (data.checks) {
+          Object.keys(data.checks).forEach(key => {
+            localStorage.setItem(CHECK_PREFIX + key, data.checks[key] ? "true" : "false");
+          });
+        }
+
+        initAll();
+        closeModal("backupModal");
+        showToast("已完成匯入");
+      } catch (error) {
+        showToast("JSON 格式不正確");
+      }
+    }
+
+    function resetAll() {
+      const ok = window.confirm ? confirm("確定重設為 Yi 初始完整資料？所有修改會清除。") : true;
+      if (!ok) return;
+
+      state = {
+        days: structuredClone(initialDays),
+        selectedDay: "d1224",
+        weather: "sunny",
+        rate: 0.052,
+        expenses: [
+          { name: "札幌–登別區域 Pass 3人", yen: 30000 },
+          { name: "機場 JR 來回估算", yen: 7500 },
+          { name: "白色戀人地鐵估算", yen: 1800 },
+          { name: "登別溫泉巴士估算", yen: 3000 }
+        ]
+      };
+
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        bookings.forEach(item => localStorage.removeItem(CHECK_PREFIX + item[0]));
+      } catch (error) {}
+
+      saveState();
+      initAll();
+      closeModal("backupModal");
+      showToast("已重設為初始資料");
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("已複製到剪貼簿");
+        }).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      try {
+        document.execCommand("copy");
+        showToast("已複製到剪貼簿");
+      } catch (error) {
+        showToast("複製失敗，請手動複製");
+      }
+      document.body.removeChild(area);
+    }
+
+    function getGps() {
+      const status = document.getElementById("gpsStatus");
+      status.textContent = "⚙️ 正在獲取目前 GPS 位置...";
+
+      if (!navigator.onLine) {
+        status.textContent = "目前離線，GPS 及地圖相關功能可能受限制。";
+      }
+
+      if (!navigator.geolocation) {
+        status.textContent = "此裝置不支援 GPS 定位。";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude.toFixed(5);
+          const lng = position.coords.longitude.toFixed(5);
+          status.textContent = `目前位置：${lat}, ${lng}`;
+        },
+        () => {
+          status.textContent = "無法取得 GPS 位置。請檢查定位權限。";
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 60000
+        }
+      );
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeJs(value) {
+      return String(value || "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "");
+    }
+
+    function initAll() {
+      renderDays();
+      renderSpots();
+      renderCoupons();
+      renderBookings();
+      renderBudget();
+      setWeatherMode(state.weather || "sunny");
+      updateOfflineNotice();
+    }
+
+    function updateOfflineNotice() {
+      const offlineNotice = document.getElementById("offlineNotice");
+      if (!offlineNotice) return;
+      offlineNotice.classList.toggle("show", !navigator.onLine);
+    }
+
+    function setupPwaInstall() {
+      const banner = document.getElementById("pwaBanner");
+      const installBtn = document.getElementById("installBtn");
+
+      window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        const dismissed = localStorage.getItem("yi-pwa-install-dismissed") === "true";
+        if (!dismissed) {
+          banner.classList.add("show");
+        }
+      });
+
+      installBtn.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) {
+          showToast("如未見安裝提示，請用瀏覽器選單「加入主畫面」。");
+          return;
+        }
+
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        banner.classList.remove("show");
+      });
+
+      window.addEventListener("appinstalled", () => {
+        banner.classList.remove("show");
+        showToast("已安裝北海道助手");
+      });
+    }
+
+    function dismissInstallBanner() {
+      localStorage.setItem("yi-pwa-install-dismissed", "true");
+      document.getElementById("pwaBanner").classList.remove("show");
+    }
+
+    function registerServiceWorker() {
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            const registration = await navigator.serviceWorker.register("./service-worker.js");
+            registration.addEventListener("updatefound", () => {
+              const newWorker = registration.installing;
+              if (!newWorker) return;
+
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  showToast("已有新版本，重新開啟 App 後更新。");
+                }
+              });
+            });
+          } catch (error) {
+            console.warn("Service Worker registration failed:", error);
+          }
+        });
+      }
+    }
+
+    window.addEventListener("online", updateOfflineNotice);
+    window.addEventListener("offline", updateOfflineNotice);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      initAll();
+      getGps();
+      setupPwaInstall();
+      registerServiceWorker();
+    });
+  </script>
+</body>
+</html>
